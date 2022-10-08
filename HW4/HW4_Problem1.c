@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int main(int argc, char *argv[])
+int main()
 {
     // Ask user for input of unsigned integer
     printf("Enter an intenger value: ");
