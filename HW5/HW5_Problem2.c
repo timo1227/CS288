@@ -5,7 +5,7 @@ int main()
 {
     // Get count of numbers to be sorted
     int count;
-    // printf("How many numbers do you want to sort? "); // Comment out entier line for bash diff testing
+    printf("How many numbers do you want to sort? "); // Comment out entier line for bash diff testing
     scanf("%d", &count);
     float f[100];
     // Typecast to float using pointer
@@ -13,7 +13,7 @@ int main()
     // Get Float numbers
     for (int i = 0; i < count; i++)
     {
-        // printf("\tEnter a float number: "); // Comment out entier line for bash diff testing
+        printf("\tEnter a float number: "); // Comment out entier line for bash diff testing
         scanf("%f", &f[i]);
     }
 
@@ -85,9 +85,11 @@ int main()
     }
 
     // Print sorted Float numbers
-    // printf("Sorted Array of Floats: \n"); // Comment out entier line for bash diff testing
+    printf("Sorted Array of Floats: "); // Comment out entier line for bash diff testing
     for (int i = 0; i < count; i++)
     {
-        printf("%f\n", f[i]);
+        printf("%f ", f[i]);
+        // printf("\n"); // Uncomment out entier line for bash diff testing
     }
+    printf("\n"); // Comment out entier line for bash diff testing
 }
