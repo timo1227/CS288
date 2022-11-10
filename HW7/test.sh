@@ -9,7 +9,7 @@ do
   echo $RANDOM 
 done | tee -a input 
 echo "============= execution result ================" 
-cat input | ./P2 | tee your_output 
+cat input | ./P2_fix | tee your_output 
 sort -n input > standard_output 
 echo "====== differences from correct result =======" 
 diff  your_output  standard_output 
