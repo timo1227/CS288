@@ -39,22 +39,38 @@ int main()
     // Bubble Sort List
     if (head != NULL)
     {
-        current = head;
-        struct node *next = NULL;
-        while (current != NULL)
+        int swap = 1;
+        while (swap)
         {
-            next = current->next;
+            swap = 0;
+            current = head;
+            struct node *prev = NULL;
+            struct node *next = current->next;
             while (next != NULL)
             {
                 if (current->data > next->data)
                 {
-                    int temp = current->data;
-                    current->data = next->data;
-                    next->data = temp;
+                    swap = 1;
+                    if (prev != NULL)
+                    {
+                        prev->next = next;
+                    }
+                    else
+                    {
+                        head = next;
+                    }
+                    current->next = next->next;
+                    next->next = current;
+                    prev = next;
+                    next = current->next;
                 }
-                next = next->next;
+                else
+                {
+                    prev = current;
+                    current = next;
+                    next = next->next;
+                }
             }
-            current = current->next;
         }
     }
     else
