@@ -96,7 +96,7 @@ void merge_to_open()
         rnode = NULL;
         while (qnode != NULL)
         {
-            if (pnode->f < qnode->f)
+            if (pnode->f <= qnode->f)
             {
                 if (rnode == NULL)
                 {
