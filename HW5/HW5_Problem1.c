@@ -5,15 +5,15 @@ int main()
 {
     // Get count of numbers to be sorted
     int count;
-    printf("How many numbers do you want to sort? "); // Comment out entier line for bash diff testing
+    // printf("How many numbers do you want to sort? "); // Comment out entier line for bash diff testing
     scanf("%d", &count);
 
     // Get numbers to be sorted
     int numbers[100];
-    printf("Enter %d numbers to be sorted:\n", count); // Comment out entier line for bash diff testing
+    // printf("Enter %d numbers to be sorted:\n", count); // Comment out entier line for bash diff testing
     for (int i = 0; i < count; i++)
     {
-        printf("\tEnter number: "); // Comment out entier line for bash diff testing
+        // printf("\tEnter number: "); // Comment out entier line for bash diff testing
         scanf("%d", &numbers[i]);
     }
 
@@ -59,11 +59,12 @@ int main()
     }
 
     // Print sorted numbers
-    printf("Sorted numbers: "); // Comment out entier line for bash diff testing
+    // printf("Sorted numbers: "); // Comment out entier line for bash diff testing
     for (int i = 0; i < count; i++)
     {
-        printf("%d ", numbers[i]);
-        // printf("\n"); // Uncomment out entier line for bash diff testing
+        printf("%d", numbers[i]);
+        // printf(" "); // Comment out entier line for bash diff testing
+        printf("\n"); // Uncomment out entier line for bash diff testing
     }
-    printf("\n"); // Comment out entier line for bash diff testing
+    // printf("\n"); // Comment out entier line for bash diff testing
 }
