@@ -4,9 +4,7 @@
 
 #define MAX 1000
 
-int arr[MAX]; // Remove this array create local one in each process
-// pass size of array to each process and function so it can sort them with correct ammount of elements
-bool containZero = false;
+int *arr;
 
 // MPI Count sort function
 void *countElems(int *arr, int size, int rank, int world_size, char filename[] = NULL)
@@ -21,89 +19,80 @@ void *countElems(int *arr, int size, int rank, int world_size, char filename[] =
     // Get the ending index of the array for each process
     int end = start + numElems;
     // Create a count array to store the count of each unique element
-    int *count = (int *)malloc(sizeof(int) * size);
+    int *count = (int *)malloc(sizeof(int) * MAX);
 
     // Initialize the count array to 0
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < MAX; i++)
     {
         count[i] = 0;
     }
 
     // Sort the elements in the array
+    // printf("Process: %d, Start: %d, End: %d\n", rank, start, end);
     for (int i = start; i < end; i++)
     {
         int val = arr[i];
         count[val]++;
+        // printf("\tRank: %d, Index: %d, Count: %d\n", rank, val, count[val]);
     }
 
     if (rank == 0)
     {
         // Send the count array to 1
-        MPI_Isend(count, size, MPI_INT, 1, 0, MPI_COMM_WORLD, &request);
+        MPI_Isend(count, MAX, MPI_INT, 1, 0, MPI_COMM_WORLD, &request);
         // Wait for the count from final process
         MPI_Wait(&request, &status);
         // Receive the count array from final process
-        int *finalCount = (int *)malloc(sizeof(int) * size);
-        MPI_Recv(finalCount, size, MPI_INT, world_size - 1, 0, MPI_COMM_WORLD, &status);
+        int *finalCount = (int *)malloc(sizeof(int) * MAX);
+        MPI_Recv(finalCount, MAX, MPI_INT, world_size - 1, 0, MPI_COMM_WORLD, &status);
         // Sort the array using the count array
         int index = 0;
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < MAX; i++)
         {
-            for (int j = 0; j < finalCount[i]; j++)
+            if (finalCount[i] > 0)
             {
-                arr[index] = i;
-                index++;
+                for (int j = 0; j < finalCount[i]; j++)
+                {
+                    arr[index] = i;
+                    index++;
+                }
             }
         }
 
         // Print the sorted array
-        // for (int i = 0; i < size; i++)
-        // {
-        //     if (i == 0 && containZero)
-        //     {
-        //         printf("%d ", arr[i]);
-        //     }
-        //     else if (arr[i] == 0)
-        //     {
-        //         continue;
-        //     }
-        //     printf("%d ", arr[i]);
-        // }
+        int total = 0;
+        for (int i = 0; i < size; i++)
+        {
+            // printf("%d ", arr[i]);
+            total += arr[i];
+        }
+        printf("Total: %d", total);
+        printf("\n");
 
         // Save the sorted array to the file
         FILE *file = fopen(filename, "wb");
-        for (int i = 0; i < size; i++)
-        {
-            if (i == 0 && containZero && arr[i] == 0)
-            {
-                fwrite(&arr[i], sizeof(int), 1, file);
-            }
-            else if (arr[i] == 0)
-            {
-                continue;
-            }
-            fwrite(&arr[i], sizeof(int), 1, file);
-        }
+        fwrite(arr, sizeof(int), size, file);
+        fclose(file);
     }
     else
     {
         // Receive the count array from previous process
-        int *prevCount = (int *)malloc(sizeof(int) * size);
-        MPI_Recv(prevCount, size, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, &status);
+        int *prevCount = (int *)malloc(sizeof(int) * MAX);
+        MPI_Recv(prevCount, MAX, MPI_INT, rank - 1, 0, MPI_COMM_WORLD, &status);
         // Add the count array to the previous count array
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < MAX; i++)
         {
             count[i] += prevCount[i];
         }
         // Send the count array to next process
         if (rank != world_size - 1)
         {
-            MPI_Isend(count, size, MPI_INT, rank + 1, 0, MPI_COMM_WORLD, &request);
+            MPI_Isend(count, MAX, MPI_INT, rank + 1, 0, MPI_COMM_WORLD, &request);
         }
         else
         {
             // Send the count array to 0
-            MPI_Isend(count, size, MPI_INT, 0, 0, MPI_COMM_WORLD, &request);
+            MPI_Isend(count, MAX, MPI_INT, 0, 0, MPI_COMM_WORLD, &request);
         }
     }
     return NULL;
@@ -143,34 +132,36 @@ int main(int argc, char **argv)
         while (fread(&num, sizeof(int), 1, file))
         {
             // printf("%d ", num);
+            // Dynamically allocate memory for the array
+            arr = (int *)realloc(arr, sizeof(int) * (size + 1));
             arr[size] = num;
-            if (num == 0)
-            {
-                containZero = true;
-            }
             size++;
         }
-        printf("\n");
         // Close the file
         fclose(file);
+        // Send the size to other processes
+        MPI_Send(&size, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
         // Send the array to process 1
-        MPI_Send(arr, MAX, MPI_INT, 1, 0, MPI_COMM_WORLD);
+        MPI_Send(arr, size, MPI_INT, 1, 0, MPI_COMM_WORLD);
         // Call the MPI Count sort function
-        countElems(arr, MAX, world_rank, world_size, fileName);
-        // Save the sorted array to the file
-        printf("END process %d\n", world_rank);
+        countElems(arr, size, world_rank, world_size, fileName);
     }
     else
     {
+        // Receive the size from previous process
+        MPI_Recv(&size, 1, MPI_INT, world_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        // Allocate memory for the array
+        arr = (int *)malloc(sizeof(int) * size);
         // Receive the array from previous process
-        MPI_Recv(arr, MAX, MPI_INT, world_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(arr, size, MPI_INT, world_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         // Send the array to next process
         if (world_rank != world_size - 1)
         {
-            MPI_Send(arr, MAX, MPI_INT, world_rank + 1, 0, MPI_COMM_WORLD);
+            MPI_Send(&size, 1, MPI_INT, world_rank + 1, 0, MPI_COMM_WORLD);
+            MPI_Send(arr, size, MPI_INT, world_rank + 1, 0, MPI_COMM_WORLD);
         }
         // Call the MPI Count sort function
-        countElems(arr, MAX, world_rank, world_size);
+        countElems(arr, size, world_rank, world_size);
     }
     // Finalize the MPI environment.
     MPI_Finalize();
