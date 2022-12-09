@@ -15,8 +15,6 @@ int counter = 0;
 
 void CalcPiAprox(void *threadarg)
 {
-    // Lock the mutex
-    pthread_mutex_lock(&lock);
     // Get the thread number
     long thread_num = ((thread_data *)threadarg)->id[counter];
     counter++;
@@ -37,8 +35,6 @@ void CalcPiAprox(void *threadarg)
         partial_sum += 4.0 / (1.0 + x * x);
     }
     pi_approx[thread_num] = partial_sum;
-    // Unlock the mutex
-    pthread_mutex_unlock(&lock);
     pthread_exit(NULL);
 }
 
@@ -53,7 +49,7 @@ int main(int argc, char const *argv[])
     printf("Enter the number of terms: ");
     scanf("%ld", &data->n);
     // Create an array to store the approximations
-    data->pi_approx = malloc(data->num_threads * sizeof(long));
+    data->pi_approx = malloc(data->num_threads * sizeof(long double));
     // Create an array of threads
     pthread_t *threads = malloc(data->num_threads * sizeof(pthread_t));
     // Create array of thread numbers
@@ -67,9 +63,7 @@ int main(int argc, char const *argv[])
     // Wait for the threads to finish
     for (int i = 0; i < data->num_threads; i++)
     {
-        printf("Waiting for thread %d to finish\n", i);
         pthread_join(threads[i], NULL);
-        printf("Thread %d finished\n", i);
     }
     // Calculate the final approximation
     long double pi_approx = 0;
